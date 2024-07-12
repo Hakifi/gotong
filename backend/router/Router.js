@@ -57,6 +57,15 @@ const activity = new Activity();
 router.get('/getActivityTypeSelect', activity.getActivityTypeSelect); //
 router.get('/searchActivity', activity.searchActivity); //
 router.get('/getNearestActivity', activity.getNearestActivity); //
+router.get('/getActivity', activity.getActivity); //
+router.post('/joinActivity', auth.checkAuth, activity.joinActivity);
+router.get('/isUserInActivity', auth.checkAuth, activity.isUserInActivity);
+
+
+router.get('/getContributions', auth.checkAuth, activity.getUserContributions);
+router.post('/verifyContribution', auth.checkAuth, activity.verifyContribution);
+
+router.get('/getTopRank', activity.getTopUser);
 
 router.post('/postActivity', auth.checkAuth, upload.array('image'), activity.postActivity);
 
@@ -64,6 +73,7 @@ router.post('/postActivity', auth.checkAuth, upload.array('image'), activity.pos
 const User = require('../core/user/Index');
 const user = new User();
 
+router.get('/getUserProfileData', user.getUserProfileData);
 router.get('/searchUser', user.searchUser);
 
 // demo upload

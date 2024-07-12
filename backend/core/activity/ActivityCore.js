@@ -1,5 +1,6 @@
 const mysql = require('../../store/MySQL/Index');
 const firebase = require('../../store/Firebase/Index');
+const { getUser } = require('../user/Profile');
 
 const conn = mysql.getInstance();
 const fbase = firebase.getInstance();
@@ -203,13 +204,268 @@ ORDER BY
     });
 }
 
+const getActivity = async (activity_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('SELECT * FROM Activity WHERE activity_id = ?', [activity_id])
+            .then((result) => {
+                if (result.length > 0) {
+                    resolve(result[0]);
+                    return result[0];
+                }
+                reject(false);
+                return false;
+            })
+            .catch((error) => {
+                reject(error);
+                return false;
+            });
+    });
+}
+
+const getActivityPlan = async (activity_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('SELECT * FROM ActivityPlan WHERE activity_id = ?', [activity_id])
+            .then((result) => {
+                if (result.length > 0) {
+                    resolve(result);
+                    return result;
+                }
+                reject(false);
+                return false;
+            })
+            .catch((error) => {
+                reject(error);
+                return false;
+            });
+    });
+}
+
+const getActivityLocation = async (activity_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('SELECT * FROM ActivityLocation WHERE activity_id = ?', [activity_id])
+            .then((result) => {
+                if (result.length > 0) {
+                    resolve(result);
+                    return result;
+                }
+                reject(false);
+                return false;
+            })
+            .catch((error) => {
+                reject(error);
+                return false;
+            });
+    });
+}
+
+const joinActivity = async (user_id, activity_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery("INSERT INTO UserJoinActivity(user_id, activity_id) VALUES (?, ?)", [user_id, activity_id])
+            .then((result) => {
+                if (result.affectedRows === 1) {
+                    resolve(true);
+                    return true;
+                }
+                reject(false)
+                return false;
+            })
+            .catch((error) => {
+                reject(false);
+                return false;
+            })
+    });
+}
+
+const isUserAMemberOfActivity = async (user_id, activity_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('SELECT * FROM UserJoinActivity WHERE user_id = ? AND activity_id = ?', [user_id, activity_id])
+            .then((result) => {
+                if (result.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                reject(error);
+            });
+    });
+}
+
+const getContributions = async (user_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('SELECT * FROM UserJoinActivity JOIN Activity ON UserJoinActivity.activity_id = Activity.activity_id WHERE UserJoinActivity.user_id = ?', [user_id])
+            .then((result) => {
+                resolve(result);
+            })
+            .catch((error) => {
+                console.error(error);
+                reject(error);
+            });
+    });
+}
+
+const verifyContributionLocation = async (activity_id, latitude, longitude) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('SELECT * FROM ActivityLocation WHERE activity_id = ?', [activity_id])
+            .then((result) => {
+                if (result.length > 0) {
+                    const distance = distanceBetweenCoordinateInMeters(latitude, longitude, result[0].coordinate.x, result[0].coordinate.y);
+                    if (distance < 300) {
+                        resolve(true);
+                        return true;
+                    }
+                }
+                reject(false);
+                return false;
+            })
+            .catch((error) => {
+                reject(error);
+                return false;
+            });
+    });
+}
+
+const checkIfContributionVerified = async (activity_id, user_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('SELECT * FROM confirm_location WHERE activity_id = ? AND user_id = ?', [activity_id, user_id])
+            .then((result) => {
+                if (result.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            })
+            .catch((error) => {
+                console.error('Error checking contribution verification:', error);
+                reject(error);
+            });
+    });
+};
+
+const addContributionVerified = async (activity_id, user_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('INSERT INTO confirm_location(activity_id, user_id) VALUES (?, ?)', [activity_id, user_id])
+            .then((result) => {
+                if (result.affectedRows === 1) {
+                    resolve(true);
+                    return true;
+                }
+                reject(false);
+                return false;
+            })
+            .catch((error) => {
+                reject(error);
+                return false;
+            });
+    });
+}
+
+const getTopRankUserMonth = async () => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery(
+            `SELECT user_id, COUNT(user_id) AS total_help 
+                FROM confirm_location 
+                WHERE date_confirm >= NOW() - INTERVAL 1 MONTH 
+                GROUP BY user_id 
+                ORDER BY total_help DESC LIMIT 6`
+        )
+            .then(async (results) => {
+                const detailedResults = [];
+
+                for (const result of results) {
+                    const userDetail = await getUser(result.user_id);
+
+                    detailedResults.push({
+                        name: userDetail.name,
+                        username: userDetail.username,
+                        total_help: result.total_help
+                    });
+                }
+
+                resolve(detailedResults);
+            })
+            .catch((error) => {
+                reject(error);
+            });
+    });
+};
+
+const getTopRankUserAllTime = async () => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery(
+            `SELECT user_id, COUNT(user_id) AS total_help 
+                 FROM confirm_location 
+                 GROUP BY user_id 
+                 ORDER BY total_help DESC LIMIT 6`
+        )
+            .then(async (results) => {
+                const detailedResults = [];
+
+                for (const result of results) {
+                    const userDetail = await getUser(result.user_id);
+
+                    detailedResults.push({
+                        name: userDetail.name,
+                        username: userDetail.username,
+                        total_help: result.total_help
+                    });
+                }
+
+                resolve(detailedResults);
+            })
+            .catch((error) => {
+                reject(error);
+            });
+    });
+};
+
+const getUserHelpCount = async (user_id) => {
+    return new Promise((resolve, reject) => {
+        conn.executeQuery('SELECT COUNT(*) AS total_help FROM confirm_location WHERE user_id = ?', [user_id])
+            .then((result) => {
+                if (result && result[0]) {
+                    resolve(result[0].total_help);
+                } else {
+                    reject(new Error('Invalid result from query'));
+                }
+            })
+            .catch((error) => {
+                reject(error);
+            });
+    });
+}
+
+
+const getUserActivityHistory = async (user_id) => {
+    return new Promise((resolve, reject) => {
+        let data = {
+
+        }
+    });
+
+}
+
 module.exports = {
+    getUserHelpCount,
+    getTopRankUserMonth,
+    getTopRankUserAllTime,
+    addContributionVerified,
+    checkIfContributionVerified,
+    verifyContributionLocation,
+    getContributions,
     getActivityTypeSelection,
     getActivityType,
     getActivityImage,
     getActivityJoinCount,
+    getActivity,
+    getActivityPlan,
+    getActivityLocation,
     searchActivity,
     getNearestActivity,
+    isUserAMemberOfActivity,
+    joinActivity,
     addActivity,
     addImage,
     addPlan,

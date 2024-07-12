@@ -8,7 +8,7 @@ const fbase = firebase.getInstance();
 
 const searchUser = async (search_query) => {
     return new Promise((resolve, reject) => {
-        conn.executeQuery('SELECT User.name, User.username, User.profile_picture, Tier.name AS tier_name, Tier.mascot_image FROM User JOIN Tier ON User.tier_id = Tier.tier_id WHERE User.name LIKE ? OR User.username LIKE ?', [`%${search_query}%`, `%${search_query}%`])
+        conn.executeQuery('SELECT User.User_id, User.name, User.username, User.profile_picture, Tier.name AS tier_name, Tier.mascot_image FROM User JOIN Tier ON User.tier_id = Tier.tier_id WHERE User.name LIKE ? OR User.username LIKE ?', [`%${search_query}%`, `%${search_query}%`])
             .then((result) => {
                 resolve(result);
                 return true;
@@ -22,7 +22,7 @@ const searchUser = async (search_query) => {
 
 const getUser = async (user_id) => {
     return new Promise((resolve, reject) => {
-        conn.executeQuery('SELECT User.name, User.username, User.profile_picture, Tier.name AS tier_name, Tier.mascot_image FROM User JOIN Tier ON User.tier_id = Tier.tier_id WHERE User.user_id = ?', [user_id])
+        conn.executeQuery('SELECT User.name, User.username, User.profile_picture, User.bio, Tier.name AS tier_name, Tier.mascot_image FROM User JOIN Tier ON User.tier_id = Tier.tier_id WHERE User.user_id = ?', [user_id])
             .then((result) => {
                 if (result.length == 0) {
                     reject(false);
@@ -39,7 +39,6 @@ const getUser = async (user_id) => {
 }
 
 const getUserDetailed = (user_id) => {
-
 }
 
 module.exports = {

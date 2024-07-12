@@ -1,6 +1,7 @@
 const mysql = require('../../store/MySQL/Index');
 const { getUserID } = require('../auth/AuthCore');
-const { getActivityTypeSelection, addActivity, addLocation, addImage, addPlan, searchActivity, getActivityType, getActivityImage, getActivityJoinCount, getNearestActivity } = require('./ActivityCore');
+const { getUser } = require('../user/Profile');
+const { getActivityTypeSelection, addActivity, addLocation, addImage, addPlan, searchActivity, getActivityType, getActivityImage, getActivityJoinCount, getNearestActivity, getActivity, getActivityPlan, getActivityLocation, joinActivity, isUserAMemberOfActivity, getContribution, getContributions, verifyContributionLocation, checkIfContributionVerified, addContributionVerified, getTopRankUserMonth, getTopRankUserAllTime } = require('./ActivityCore');
 
 class Activity {
 
@@ -9,6 +10,8 @@ class Activity {
         this.getActivityTypeSelect = this.getActivityTypeSelect.bind(this);
         this.postActivity = this.postActivity.bind(this);
         this.searchActivity = this.searchActivity.bind(this);
+        this.joinActivity = this.joinActivity.bind(this);
+        this.isUserInActivity = this.isUserInActivity.bind(this);
     }
 
 
@@ -125,13 +128,226 @@ class Activity {
         }
     }
 
-    async getUrgentActivity(req, res) {
+    async getActivity(req, res) {
+        const activity_id = req.headers['activity_id'];
 
+        if (!activity_id) {
+            res.status(400).json({ error: 'Missing activity id' });
+            return;
+        }
+
+        let api_key = req.headers['x-api-key'];
+        let result = await getActivity(activity_id);
+
+        if (!result) {
+            res.status(500).json({ error: 'Failed to get activity' });
+            return;
+        }
+
+        if (result) {
+
+            const userData = await getUser(result.user_id);
+            const activity_type_name = await getActivityType(result.activity_type);
+            const location = await getActivityLocation(result.activity_id);
+            const images = await getActivityImage(result.activity_id);
+            const plans = await getActivityPlan(result.activity_id);
+
+            for (let i = 0; i < images.length; i++) {
+                images[i] = {
+                    url: images[i].s3_url,
+                }
+            }
+
+            result = {
+                activity_id: result.activity_id,
+                activity_name: result.name,
+                initiator_name: userData.name,
+                initiator_profile_picture: userData.profile_picture,
+                isUrgent: activity_type_name.urgent === 0 ? false : true,
+                contact_person: {
+                    telephone: result.telephone,
+                    instagram: result.instagram
+                },
+                status: result.activity_status,
+                type: activity_type_name.activity_type_name,
+                images: images,
+                description_short: result.description,
+                posted_date: result.creation_date,
+                date_action: result.date_action,
+                total_join: await getActivityJoinCount(result.activity_id),
+                city: result.city,
+                location: {
+                    address: location[0].address,
+                    latitude: location[0].coordinate.x,
+                    longitude: location[0].coordinate.y
+                },
+                resource: {
+
+                },
+                plans: plans,
+            }
+
+            res.status(200).json(result);
+        }
     }
 
-    async getPopularActivity(req, res) {
+    async isUserInActivity(req, res) {
+        let api_key = req.headers['x-api-key'];
 
+        if (!api_key) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        let user_id = await getUserID(api_key);
+
+        if (!user_id) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        let activity_id = req.headers['activity_id'];
+
+        try {
+            let isUserAMember = await isUserAMemberOfActivity(user_id, activity_id);
+            res.status(200).json(isUserAMember);
+        } catch (error) {
+            res.status(500).json({ error: "Internal Server Error" });
+        }
     }
+
+    async getUserContributions(req, res) {
+        let api_key = req.headers['x-api-key'];
+
+        if (!api_key) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        let user_id = await getUserID(api_key);
+
+        if (!user_id) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        try {
+            let contributions = await getContributions(user_id);
+
+            if (!contributions) {
+                res.status(500).json([]);
+                return;
+            }
+
+            let result = {
+                past: [],
+                upcoming: [],
+                now: []
+            }
+
+            for (let i = 0; i < contributions.length; i++) {
+
+                const activity_type_name = await getActivityType(contributions[i].activity_type);
+                const images = await getActivityImage(contributions[i].activity_id);
+
+                contributions[i] = {
+                    activity_id: contributions[i].activity_id,
+                    activity_name: contributions[i].name,
+                    date_action: contributions[i].date_action,
+                    images_thumb: images[0].s3_url,
+                }
+
+                if (new Date(contributions[i].date_action) < new Date()) {
+                    result.past.push(contributions[i]);
+                }
+
+                if (new Date(contributions[i].date_action) > new Date()) {
+                    result.upcoming.push(contributions[i]);
+                }
+
+
+                if (new Date(contributions[i].date_action).getDate() == new Date().getDate()) {
+                    result.now.push(contributions[i]);
+                }
+            }
+            console.log(result);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+
+    async verifyContribution(req, res) {
+        let api_key = req.headers['x-api-key'];
+        let { activity_id, latitude, longitude } = req.headers;
+
+        console.log(activity_id, latitude, longitude);
+
+        if (!api_key) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        let user_id = await getUserID(api_key);
+
+        if (!user_id) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        if (!activity_id || !latitude || !longitude) {
+            res.status(400).json({ error: "Missing activity_id or location" });
+            return;
+        }
+
+        try {
+            const check = await checkIfContributionVerified(activity_id, user_id);
+
+            if (check) {
+                res.status(200).json({ error: "Already verified" });
+                return;
+            }
+
+            const verificationRes = await verifyContributionLocation(activity_id, latitude, longitude);
+
+            if (!verificationRes) {
+                res.status(500).json({ error: "Failed to verify contribution" });
+                return;
+            }
+
+            const addContr = await addContributionVerified(activity_id, user_id);
+
+            if (!addContr) {
+                res.status(500).json({ error: "Failed to verify contribution" });
+                return;
+            }
+
+            res.status(200).json({ message: "Success" });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+
+    async getTopUser(req, res) {
+        let { time } = req.headers;
+
+        if (time === 'month') {
+            const result = await getTopRankUserMonth();
+            res.status(200).json(result);
+            return;
+        }
+
+        if (time === 'all-time') {
+            const result = await getTopRankUserAllTime();
+            res.status(200).json(result);
+            return;
+        }
+
+        res.status(400).json({ error: "Invalid time" });
+    }
+
+
 
     // post
 
@@ -222,6 +438,33 @@ class Activity {
             console.log(error);
             res.status(500).json({ error: 'Failed', details: error.message });
         }
+    }
+
+    async joinActivity(req, res) {
+        let api_key = req.headers['x-api-key'];
+        let activity_id = req.headers['activity_id'];
+
+        if (!api_key) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        let user_id = await getUserID(api_key);
+
+        if (!user_id) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        const joinActivityX = await joinActivity(user_id, activity_id);
+
+        if (!joinActivityX) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        res.status(200).json({ message: "Success" });
+        return;
     }
 
 }
