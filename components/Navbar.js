@@ -56,7 +56,7 @@ const Navbar = ({ user }) => {
                             </li>
                             {user && (
                                 <li className='max-lg:border-b max-lg:py-3 px-3'>
-                                    <a href='/model-citizen'
+                                    <a href='/contribution'
                                         className='lg:hover:text-[#526D82] text-black block font-semibold text-[15px]'>View Contribution</a>
                                 </li>
                             )}

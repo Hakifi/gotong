@@ -4,6 +4,7 @@ import { useAuth } from "../authentication/AuthContext";
 import Banner from "../components/Banner";
 import ActivityCardScroll from "../components/Cards/ActivityCardScroll";
 import { useEffect, useState } from "react";
+import Footer from "../components/Footer";
 
 
 const Index = ({ activites, ipCoord }) => {
@@ -54,6 +55,7 @@ const Index = ({ activites, ipCoord }) => {
                 <p className='text-gray-500 text-md sm:text-xl font-light mt-2'>Find Gotong Royong near you and help others</p>
             </div>
             {gotong.length > 0 ? <ActivityCardScroll activity={gotong} /> : <div className='container mx-auto mt-6 p-4 sm:p-8'><p className='text-gray-500 text-md sm:text-xl font-light mt-2'>No Gotong Royong near you</p></div>}
+            <Footer />
         </div>
     )
 

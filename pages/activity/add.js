@@ -9,6 +9,7 @@ import axios from "axios";
 import ImageUploadGallery from "../../components/Image/ImageUploadGallery";
 import CreatableSelect from 'react-select/creatable';
 import { useRouter } from "next/router";
+import Footer from "../../components/Footer";
 
 
 const Add = ({ error, firstStageType }) => {
@@ -136,7 +137,7 @@ const Add = ({ error, firstStageType }) => {
 
                                         if (res.status === 200) {
                                             alert('Activity added successfully');
-                                            Router.push('/activity');
+                                            router.push('/');
                                         }
 
 
@@ -156,6 +157,7 @@ const Add = ({ error, firstStageType }) => {
             </div>
         );
     }
+
     const FirstStep = ({ typeSelection, filesRef }) => {
 
         const [coordinate, setCoordinate] = useState(null);
@@ -519,6 +521,7 @@ const Add = ({ error, firstStageType }) => {
                 {step === 2 && (<SecondStep />)}
                 {step === 3 && (<ThirdStep />)}
             </div>
+            <Footer />
         </div>
     )
 

@@ -1,6 +1,12 @@
+import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 
 const ActivityCardScroll = ({ activity }) => {
+
+    const router = useRouter();
+
+    console.log(activity);
+
     return (
         <div>
             <div class="md:px-10 px-4 py-6 font-[sans-serif]">
@@ -9,7 +15,7 @@ const ActivityCardScroll = ({ activity }) => {
                         {activity.map((activity) => (
                             <div class="max-w-sm mx-auto bg-white rounded-xl shadow-md overflow-hidden">
                                 <div class="relative h-52">
-                                    <img class="w-full h-full object-cover" src="https://www.static-src.com/wcsstore/Indraprastha/images/catalog/full/catalog-image/103/MTA-94803924/oem_oem_full01.jpg" alt="Kolam Ikan Ikonik Tangerang" />
+                                    <img class="w-full h-full object-cover" src={activity.images_thumb} />
                                     <div class="absolute bottom-2 right-2 bg-slate-400 text-xs font-semibold px-2 py-1 rounded">
                                         {Math.ceil(activity.distance / 6)} km
                                     </div>
@@ -20,7 +26,7 @@ const ActivityCardScroll = ({ activity }) => {
                                 <div class="p-6 flex flex-col">
                                     <h2 class="text-xl font-bold text-gray-900 mb-2">{activity.activity_name}</h2>
                                     <div class="mt-auto">
-                                        <p class="text-gray-600 text-sm mb-4">Kolam ikan ini adalah peninggalan bersejarah dari zaman megalitikum</p>
+                                        <p class="text-gray-600 text-sm mb-4">{activity.description_short}</p>
                                         <div class="flex justify-between items-center mb-4">
                                             <span class="text-sm text-gray-500">{activity.total_join || 0} people joined</span>
                                             <span class="text-sm text-gray-500">{activity.city}</span>
@@ -31,7 +37,7 @@ const ActivityCardScroll = ({ activity }) => {
                                             ) : (
                                                 <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium">Inactive</button>
                                             )}
-                                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">View</button>
+                                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" onClick={() => router.push(`/activity?id=${activity.activity_id}`)}>View</button>
                                         </div>
                                     </div>
                                 </div>

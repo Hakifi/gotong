@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar';
 import ActivityCard from '../../components/Cards/ActivityCard';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import Footer from '../../components/Footer';
 
 const Activity = ({ activities, query }) => {
     const { user } = useAuth();
@@ -16,6 +17,7 @@ const Activity = ({ activities, query }) => {
                 <p className='text-gray-500'>Showing search result for "{query}"</p>
             </div>
             <ActivityCard activity={activities ? activities : []} />
+            <Footer />
         </div>
     );
 };

@@ -5,18 +5,22 @@ import ActivityCard from '../../components/Cards/ActivityCard';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import UserCard from '../../components/Cards/UserCard';
+import Footer from '../../components/Footer';
 
 const User = ({ activities, query }) => {
     const { user } = useAuth();
 
     return (
-        <div className="bg-white min-h-screen p-6">
-            <Navbar user={user} />
-            <div className='container mx-auto mt-6 '>
-                <h2 className='text-2xl font-semibold text-black'>Search Result for User</h2>
-                <p className='text-gray-500'>Showing search result for "{query}"</p>
+        <div className='bg-white min-h-screen'>
+            <div className=" p-6">
+                <Navbar user={user} />
+                <div className='container mx-auto mt-6 '>
+                    <h2 className='text-2xl font-semibold text-black'>Search Result for User</h2>
+                    <p className='text-gray-500'>Showing search result for "{query}"</p>
+                </div>
+                <UserCard userData={activities ? activities : []} />
             </div>
-            <UserCard userData={activities ? activities : []} />
+            <Footer />
         </div>
     );
 };

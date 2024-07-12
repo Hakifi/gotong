@@ -1,13 +1,18 @@
+import { useRouter } from "next/router";
 
 
 const UserCard = ({ userData }) => {
+
+    const router = useRouter();
+    console.log(userData);
+
     return (
         <div class="md:px-10 px-4 py-6 font-[sans-serif]">
             <div class="container mx-auto">
                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
 
                     {userData.map((user) => (
-                        <div class="max-w-lg mx-auto bg-white rounded-xl shadow-md overflow-hidden mt-4">
+                        <div class="max-w-lg mx-auto bg-white rounded-xl shadow-md overflow-hidden mt-4" onClick={() => window.location.href = `/profile?query=${user.User_id}`}>
                             <div class="relative h-48">
                                 <img class="w-full h-full object-cover" src={user.profile_picture ? user.profile_picture : "https://is3.cloudhost.id/gotong-garuda-hack/svg/person-svgrepo-com.svg"} alt="Profile Picture" />
                                 <div class="absolute bottom-2 right-2 bg-white text-xs font-semibold px-2 py-1 rounded">

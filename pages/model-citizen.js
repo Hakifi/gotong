@@ -1,12 +1,15 @@
 import Select from "react-select"
 import { useAuth } from "../authentication/AuthContext"
 import Navbar from "../components/Navbar"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import Footer from "../components/Footer"
+import axios from "axios"
 
 
 const ModelCitizen = ({ }) => {
 
     const [selectedOption, setSelectedOption] = useState({ value: 'all-time', label: 'All Time' });
+    const [data, setData] = useState([]);
 
     const { user } = useAuth();
 
@@ -25,9 +28,23 @@ const ModelCitizen = ({ }) => {
         }),
     };
 
+    const getData = async () => {
+        const dat = await axios.get('http://localhost:8592/api/v1/getTopRank', {
+            headers: {
+                'time': selectedOption.value
+            }
+        });
+        setData(dat.data);
+    }
+
     const handleSelectChange = (selectedOption) => {
         setSelectedOption(selectedOption);
+        getData();
     }
+
+    useEffect(() => {
+        getData();
+    }, []);
 
     return (
         <div className="w-full min-h-screen bg-white">
@@ -42,8 +59,7 @@ const ModelCitizen = ({ }) => {
                             onChange={handleSelectChange}
                             value={selectedOption}
                             options={[
-                                { value: 'weekly', label: 'Weekly' },
-                                { value: 'monthly', label: 'Monthly' },
+                                { value: 'month', label: 'Monthly' },
                                 { value: 'all-time', label: 'All Time' },
                             ]} />
 
@@ -56,9 +72,9 @@ const ModelCitizen = ({ }) => {
                             <div class="w-24 h-24 rounded-full bg-gray-200 mx-auto mb-2"></div>
                             <div class="absolute -top-2 -right-2 w-10 h-10 bg-[#F4AC05] rounded-full flex items-center justify-center text-black font-bold">1</div>
                         </div>
-                        <h3 class="text-lg font-semibold text-black">Username</h3>
-                        <p class="text-gray-600 font-medium">Legenda</p>
-                        <p class="text-sm text-gray-500">Help 12x</p>
+                        <h3 class="text-lg font-semibold text-black">{data[0] ? data[0].name : 'No Data'}</h3>
+                        <p class="text-gray-600 font-medium">{data[0] ? data[0].username : 'No Data'}</p>
+                        <p class="text-sm text-gray-500">Help {data[0] ? data[0].total_help : 0}x</p>
                     </div>
 
                     <div class="bg-white p-4 rounded-lg shadow text-center order-2 md:order-1">
@@ -66,9 +82,9 @@ const ModelCitizen = ({ }) => {
                             <div class="w-24 h-24 rounded-full bg-gray-200 mx-auto mb-2"></div>
                             <div class="absolute -top-2 -right-2 w-10 h-10 bg-[#BBD8FF] rounded-full flex items-center justify-center text-black font-bold">2</div>
                         </div>
-                        <h3 class="text-lg font-semibold text-black">Username</h3>
-                        <p class="text-gray-600 font-medium">Legenda</p>
-                        <p class="text-sm text-gray-500">Help 11x</p>
+                        <h3 class="text-lg font-semibold text-black">{data[1] ? data[1].name : 'No Data'}</h3>
+                        <p class="text-gray-600 font-medium">{data[1] ? data[1].username : 'No Data'}</p>
+                        <p class="text-sm text-gray-500">Help {data[1] ? data[1].total_help : 0}x</p>
                     </div>
 
                     <div class="bg-white p-4 rounded-lg shadow text-center order-3 md:order-3">
@@ -76,9 +92,9 @@ const ModelCitizen = ({ }) => {
                             <div class="w-24 h-24 rounded-full bg-gray-200 mx-auto mb-2"></div>
                             <div class="absolute -top-2 -right-2 w-10 h-10 bg-[#B47D4D] rounded-full flex items-center justify-center text-black font-bold">3</div>
                         </div>
-                        <h3 class="text-lg font-semibold text-black">Username</h3>
-                        <p class="text-gray-600 font-medium">Pahlawan</p>
-                        <p class="text-sm text-gray-500">Help 7x</p>
+                        <h3 class="text-lg font-semibold text-black">{data[2] ? data[2].name : 'No Data'}</h3>
+                        <p class="text-gray-600 font-medium">{data[2] ? data[2].username : 'No Data'}</p>
+                        <p class="text-sm text-gray-500">Help {data[2] ? data[2].total_help : 0}x</p>
                     </div>
                 </div>
 
@@ -87,11 +103,11 @@ const ModelCitizen = ({ }) => {
                         <div class="flex items-center">
                             <span class="font-bold mr-4 text-black">4</span>
                             <div class="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-                            <span className="text-black">Username</span>
+                            <span className="text-black">{data[3] ? data[3].name : 'No Data'}</span>
                         </div>
                         <div class="flex items-center">
-                            <span class="mr-4 font-medium text-black">Pahlawan</span>
-                            <span class="text-sm text-gray-500">Help 6x</span>
+                            <span class="mr-4 font-medium text-black">{data[3] ? data[3].username : 'No Data'}</span>
+                            <span class="text-sm text-gray-500">Help {data[3] ? data[3].total_help : 0}x</span>
                         </div>
                     </div>
 
@@ -99,11 +115,11 @@ const ModelCitizen = ({ }) => {
                         <div class="flex items-center">
                             <span class="font-bold mr-4 text-black">5</span>
                             <div class="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-                            <span className="text-black">Username</span>
+                            <span className="text-black">{data[4] ? data[4].name : 'No Data'}</span>
                         </div>
                         <div class="flex items-center">
-                            <span class="mr-4 font-medium text-black">Pahlawan</span>
-                            <span class="text-sm text-gray-500">Help 5x</span>
+                            <span class="mr-4 font-medium text-black">{data[4] ? data[4].username : 'No Data'}</span>
+                            <span class="text-sm text-gray-500">Help {data[4] ? data[4].total_help : 0}x</span>
                         </div>
                     </div>
 
@@ -111,16 +127,17 @@ const ModelCitizen = ({ }) => {
                         <div class="flex items-center">
                             <span class="font-bold mr-4 text-black">6</span>
                             <div class="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-                            <span className="text-black">Username</span>
+                            <span className="text-black">{data[5] ? data[5].name : 'No Data'}</span>
                         </div>
                         <div class="flex items-center">
-                            <span class="mr-4 font-medium text-black">Pahlawan</span>
-                            <span class="text-sm text-gray-500">Help 5x</span>
+                            <span class="mr-4 font-medium text-black">{data[5] ? data[5].username : 'No Data'}</span>
+                            <span class="text-sm text-gray-500">Help {data[5] ? data[5].total_help : 0}x</span>
                         </div>
                     </div>
                 </div>
 
             </div>
+            <Footer />
         </div >
     )
 }
